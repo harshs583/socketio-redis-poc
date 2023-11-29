@@ -41,7 +41,7 @@ io.on('connection', (socket) => {
         const {userId, message} = data;
         // Assuming 'data' contains the user ID and the message
         const room = `room_${userId}`;
-        io.to(room).except(socket.id).emit('message', message); // sends data to all subscribed sockets of that channel
+        socket.to(room).emit('message', message); // sends data to all subscribed sockets (except itself) of that channel
     });
 
     socket.on('disconnect', async () => {
