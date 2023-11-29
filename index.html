@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Socket.IO chat</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const socket = io("http://localhost:3000");
+
+        // Function to handle the form submission for login
+        function handleSubmit(event) {
+            event.preventDefault();
+            const userId = document.getElementById('userId').value;
+            socket.emit('login', { userId });
+        }
+
+        // Function to handle sending messages
+        function sendMessage() {
+            const userId = document.getElementById('userId').value;
+            const message = document.getElementById('message').value;
+            socket.emit('message', { userId, message });
+        }
+
+        // Listening for incoming messages
+        socket.on('message', (message) => {
+            console.log('Received message:', message);
+        });
+    </script>
+    <style>
+        /* Your CSS styles */
+    </style>
+</head>
+<body>
+<!-- Login form -->
+<form onsubmit="handleSubmit(event)">
+    <label for="userId">User ID:</label>
+    <input type="text" id="userId" required />
+    <button type="submit">Login</button>
+</form>
+
+<!-- Message sending form -->
+<form>
+    <label for="message">Message:</label>
+    <input type="text" id="message" required />
+    <button type="button" onclick="sendMessage()">Send</button>
+</form>
+</body>
+</html>
