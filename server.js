@@ -3,15 +3,11 @@ import {createServer} from 'node:http';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 import {Server as SocketIOServer} from 'socket.io';
-import {createClient} from 'redis';
+import {Redis} from 'ioredis';
 
 const app = express();
 const server = createServer(app);
-const redisClient = createClient({
-    host: "127.0.0.1",
-    port: 6379
-});
-await redisClient.connect()
+const redis = new Redis();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -34,21 +30,21 @@ io.on('connection', (socket) => {
         const {userId} = data;
         const room = `room_${userId}`; // Get room name based on user ID
         socket.join(room); // Join the room
-        await redisClient.set(socket.id, room); // update redis with socket.id->room values
+        await redis.set(socket.id, room); // update redis with socket.id->room values
     });
 
-    socket.on('message', (data) => {
-        const {userId, message} = data;
+    socket.on('message', async (data) => {
+        const {message} = data;
         // Assuming 'data' contains the user ID and the message
-        const room = `room_${userId}`;
+        const room = await redis.get(socket.id); // get room name from redis
         socket.to(room).emit('message', message); // sends data to all subscribed sockets (except itself) of that channel
     });
 
     socket.on('disconnect', async () => {
         console.log(`user socket disconnected: ${socket.id}`);
-        const room = await redisClient.get(socket.id) // get room from redis
+        const room = await redis.get(socket.id) // get room from redis
         socket.leave(room) // leave room
-        await redisClient.del(socket.id) // delete socket->room data from redis
+        await redis.del(socket.id) // delete socket->room data from redis
     });
 });
 
